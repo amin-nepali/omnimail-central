@@ -25,12 +25,22 @@ async function requestJson(url, options) {
 }
 
 function renderSetupBanner(status = { ready: false, services: { firebaseAdmin: false, googleOAuth: false } }, accountCount = 0) {
-  const checks = [
+  const fallbackChecks = [
     { label: 'Database connected', ok: Boolean(status.services?.firebaseAdmin) },
     { label: 'Account connected', ok: accountCount > 0 },
     { label: 'OAuth connected', ok: Boolean(status.services?.googleOAuth) },
     { label: 'Sync ready', ok: Boolean(status.ready) },
   ];
+
+  const checks = Array.isArray(status.checks) && status.checks.length ? status.checks.map((item) => ({
+    label: item.label || item.key,
+    ok: Boolean(item.ok),
+    detail: item.detail || (item.ok ? 'Working' : 'Needs attention'),
+  })) : fallbackChecks.map((item) => ({
+    label: item.label,
+    ok: item.ok,
+    detail: item.ok ? 'Working' : 'Needs attention',
+  }));
 
   elements.setupBanner.classList.toggle('is-ready', Boolean(status.ready));
   elements.setupState.textContent = status.ready ? 'SERVICES READY' : 'SETUP NEEDED';
@@ -40,8 +50,11 @@ function renderSetupBanner(status = { ready: false, services: { firebaseAdmin: f
       <ul class="status-checklist">
         ${checks.map((item) => `
           <li class="${item.ok ? 'is-ok' : 'is-missing'}">
-            <span class="status-check">${item.ok ? '✓' : '•'}</span>
-            <span>${escapeHtml(item.label)}</span>
+            <div class="status-summary">
+              <span class="status-check">${item.ok ? '✓' : '•'}</span>
+              <span class="status-label">${escapeHtml(item.label)}</span>
+            </div>
+            <span class="status-badge">${item.ok ? 'Working' : 'Needs Attention'}</span>
           </li>
         `).join('')}
       </ul>

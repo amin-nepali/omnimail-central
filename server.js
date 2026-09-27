@@ -153,12 +153,23 @@ app.delete('/api/session', (_request, response) => {
 });
 
 app.get('/api/status', (_request, response) => {
+  const checks = [
+    { key: 'googleRedirectUri', label: 'GOOGLE_REDIRECT_URI', ok: Boolean(process.env.GOOGLE_REDIRECT_URI), detail: process.env.GOOGLE_REDIRECT_URI || 'Not set' },
+    { key: 'googleClientSecret', label: 'GOOGLE_CLIENT_SECRET', ok: Boolean(process.env.GOOGLE_CLIENT_SECRET), detail: process.env.GOOGLE_CLIENT_SECRET ? 'Working' : 'Needs attention' },
+    { key: 'googleClientId', label: 'GOOGLE_CLIENT_ID', ok: Boolean(process.env.GOOGLE_CLIENT_ID), detail: process.env.GOOGLE_CLIENT_ID ? 'Working' : 'Needs attention' },
+    { key: 'appSessionSecret', label: 'APP_SESSION_SECRET', ok: Boolean(process.env.APP_SESSION_SECRET), detail: process.env.APP_SESSION_SECRET ? 'Working' : 'Needs attention' },
+    { key: 'appAccessPassword', label: 'APP_ACCESS_PASSWORD', ok: Boolean(process.env.APP_ACCESS_PASSWORD), detail: process.env.APP_ACCESS_PASSWORD ? 'Working' : 'Needs attention' },
+    { key: 'firebaseProjectId', label: 'FIREBASE_PROJECT_ID', ok: Boolean(projectId), detail: projectId || 'Not set' },
+    { key: 'firebaseServiceAccount', label: 'FIREBASE_SERVICE_ACCOUNT_JSON', ok: firestoreReady, detail: firestoreReady ? 'Working' : 'Needs attention' },
+  ];
+
   response.json({
     app: 'OmniMail Central',
     ready: oauthReady && firestoreReady,
     services: { googleOAuth: oauthReady, firebaseAdmin: firestoreReady },
     operatorAuthConfigured: appAuthConfigured || !production,
     projectId,
+    checks,
   });
 });
 
