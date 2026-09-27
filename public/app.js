@@ -24,6 +24,32 @@ async function requestJson(url, options) {
   return data;
 }
 
+function renderSetupBanner(status = { ready: false, services: { firebaseAdmin: false, googleOAuth: false } }, accountCount = 0) {
+  const checks = [
+    { label: 'Database connected', ok: Boolean(status.services?.firebaseAdmin) },
+    { label: 'Account connected', ok: accountCount > 0 },
+    { label: 'OAuth connected', ok: Boolean(status.services?.googleOAuth) },
+    { label: 'Sync ready', ok: Boolean(status.ready) },
+  ];
+
+  elements.setupBanner.classList.toggle('is-ready', Boolean(status.ready));
+  elements.setupState.textContent = status.ready ? 'SERVICES READY' : 'SETUP NEEDED';
+  elements.setupBanner.innerHTML = `
+    <span class="banner-symbol" aria-hidden="true">i</span>
+    <div class="banner-status-list-wrap">
+      <ul class="status-checklist">
+        ${checks.map((item) => `
+          <li class="${item.ok ? 'is-ok' : 'is-missing'}">
+            <span class="status-check">${item.ok ? '✓' : '•'}</span>
+            <span>${escapeHtml(item.label)}</span>
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+    <span class="banner-state">${status.ready ? 'READY' : 'CHECKLIST'}</span>
+  `;
+}
+
 function renderAccounts() {
   elements.accountCount.textContent = String(state.accounts.length);
   if (!state.accounts.length) {
@@ -88,26 +114,26 @@ async function loadInitialState() {
   try {
     const session = await requestJson('/api/session');
     if (session.required && !session.configured) {
-      elements.setupBanner.querySelector('strong').textContent = 'Workspace access needs configuration';
-      elements.setupBanner.querySelector('p').textContent = 'Set APP_ACCESS_PASSWORD and APP_SESSION_SECRET in the Vercel project environment.';
+      renderSetupBanner({ ready: false, services: { firebaseAdmin: false, googleOAuth: false } }, 0);
       return;
     }
     if (session.required && !session.authenticated) {
       elements.accessDialog.showModal();
+      renderSetupBanner({ ready: false, services: { firebaseAdmin: false, googleOAuth: false } }, 0);
       return;
     }
     const status = await requestJson('/api/status');
     document.body.dataset.configured = String(status.ready);
     elements.footerProject.textContent = `FIREBASE PROJECT: ${status.projectId}`.toUpperCase();
-    elements.setupBanner.classList.toggle('is-ready', status.ready);
-    elements.setupState.textContent = status.ready ? 'SERVICES READY' : 'SETUP NEEDED';
     if (status.ready) {
-      elements.setupBanner.querySelector('strong').textContent = 'Services are connected';
-      elements.setupBanner.querySelector('p').textContent = 'Link a Google account, then sync to bring your messages into one view.';
       const accounts = await requestJson('/api/accounts');
       state.accounts = accounts.accounts;
       renderAccounts();
+    } else {
+      state.accounts = [];
+      renderAccounts();
     }
+    renderSetupBanner(status, state.accounts.length);
   } catch (error) {
     notify(error.message);
   }
