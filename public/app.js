@@ -1,6 +1,6 @@
 const state = { messages: [], accounts: [], view: 'All mail', loading: false };
 const elements = Object.fromEntries([
-  'setup-banner', 'setup-state', 'sync-status', 'message-list', 'account-list', 'account-count',
+  'setup-banner', 'setup-state', 'sync-status', 'sync-summary', 'message-list', 'account-list', 'account-count',
   'all-count', 'account-filter', 'search-input', 'result-count', 'current-view', 'page-title',
   'page-subtitle', 'footer-project', 'toast', 'message-dialog', 'message-detail',
   'access-dialog', 'access-form', 'access-password', 'access-error', 'access-submit',
@@ -51,10 +51,10 @@ function renderSetupBanner(status = { ready: false, services: { firebaseAdmin: f
         ${checks.map((item) => `
           <li class="${item.ok ? 'is-ok' : 'is-missing'}">
             <div class="status-summary">
-              <span class="status-check">${item.ok ? '✓' : '•'}</span>
+              <span class="status-badge">${item.ok ? 'WORKING' : 'NEEDS ATTENTION'}</span>
               <span class="status-label">${escapeHtml(item.label)}</span>
             </div>
-            <span class="status-badge">${item.ok ? 'Working' : 'Needs Attention'}</span>
+            <span class="status-check">${item.ok ? '✓' : '•'}</span>
           </li>
         `).join('')}
       </ul>
@@ -172,6 +172,25 @@ elements.accessForm.addEventListener('submit', async (event) => {
   }
 });
 
+function renderSyncSummary(messagesLoaded, failures) {
+  if (failures.length) {
+    elements.syncSummary.textContent = `${messagesLoaded} messages loaded; ${failures.length} account(s) need attention.`;
+    elements.syncSummary.classList.add('is-warning');
+    elements.syncSummary.classList.remove('is-success');
+    return;
+  }
+
+  if (messagesLoaded) {
+    elements.syncSummary.textContent = `${messagesLoaded} messages loaded successfully.`;
+    elements.syncSummary.classList.add('is-success');
+    elements.syncSummary.classList.remove('is-warning');
+    return;
+  }
+
+  elements.syncSummary.textContent = 'No messages loaded yet.';
+  elements.syncSummary.classList.remove('is-warning', 'is-success');
+}
+
 async function syncMail() {
   if (state.loading) return;
   state.loading = true;
@@ -182,9 +201,11 @@ async function syncMail() {
     state.messages = result.messages;
     elements.syncStatus.innerHTML = `<span class="status-dot"></span>Synced ${new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date(result.syncedAt))}`;
     renderMessages();
+    renderSyncSummary(result.messages.length, result.failures);
     if (result.failures.length) notify(`${result.messages.length} messages loaded; ${result.failures.length} account(s) need attention.`);
     else notify(`${result.messages.length} messages synced.`);
   } catch (error) {
+    renderSyncSummary(0, [{ email: 'system', error: error.message }]);
     notify(error.message);
   } finally {
     state.loading = false;
