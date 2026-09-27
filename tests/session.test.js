@@ -43,6 +43,12 @@ test('production requires login and issues a browser-session cookie', async () =
 
     const stillUnconfigured = await fetch(`${baseUrl}/api/accounts`, { headers: { Cookie: cookie.split(';')[0] } });
     assert.equal(stillUnconfigured.status, 503);
+
+    const removeResponse = await fetch(`${baseUrl}/api/accounts`, {
+      method: 'DELETE',
+      headers: { Cookie: cookie.split(';')[0] },
+    });
+    assert.equal(removeResponse.status, 503);
   } finally {
     await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
   }

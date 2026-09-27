@@ -232,6 +232,20 @@ app.get('/api/accounts', requireOperator, requireConfiguredServices, async (_req
   }
 });
 
+app.delete('/api/accounts', requireOperator, requireConfiguredServices, async (request, response) => {
+  try {
+    const email = typeof request.query?.email === 'string' ? request.query.email : '';
+    if (!email) return response.status(400).json({ error: 'Account email is required.' });
+
+    const db = getFirestore();
+    const accountId = crypto.createHash('sha256').update(email.toLowerCase()).digest('hex');
+    await db.collection('connected_accounts').doc(accountId).delete();
+    response.json({ deleted: true, email });
+  } catch (error) {
+    safeError(response, error);
+  }
+});
+
 app.post('/api/emails/sync', requireOperator, requireConfiguredServices, async (_request, response) => {
   try {
     const db = getFirestore();

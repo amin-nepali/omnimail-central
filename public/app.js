@@ -29,7 +29,16 @@ function renderAccounts() {
   if (!state.accounts.length) {
     elements.accountList.innerHTML = '<p class="sidebar-empty">No accounts connected</p>';
   } else {
-    elements.accountList.innerHTML = state.accounts.map((account) => `<button class="account-item" data-account="${escapeHtml(account.email)}"><span class="account-avatar">${escapeHtml(account.email.slice(0, 1).toUpperCase())}</span><span class="account-email">${escapeHtml(account.email)}</span><span class="account-online" title="Connected"></span></button>`).join('');
+    elements.accountList.innerHTML = state.accounts.map((account) => `
+      <div class="account-item-wrap">
+        <button class="account-item" data-account="${escapeHtml(account.email)}">
+          <span class="account-avatar">${escapeHtml(account.email.slice(0, 1).toUpperCase())}</span>
+          <span class="account-email">${escapeHtml(account.email)}</span>
+          <span class="account-online" title="Connected"></span>
+        </button>
+        <button class="account-remove" data-remove-account="${escapeHtml(account.email)}" aria-label="Remove ${escapeHtml(account.email)}">Remove</button>
+      </div>
+    `).join('');
   }
   const selected = elements.accountFilter.value;
   elements.accountFilter.innerHTML = '<option value="">All accounts</option>' + state.accounts.map((account) => `<option value="${escapeHtml(account.email)}">${escapeHtml(account.email)}</option>`).join('');
@@ -156,7 +165,22 @@ document.getElementById('add-account').addEventListener('click', () => window.lo
 document.getElementById('empty-connect').addEventListener('click', () => window.location.assign('/api/auth/google'));
 elements.searchInput.addEventListener('input', renderMessages);
 elements.accountFilter.addEventListener('change', renderMessages);
-elements.accountList.addEventListener('click', (event) => {
+elements.accountList.addEventListener('click', async (event) => {
+  const removeTarget = event.target.closest('[data-remove-account]');
+  if (removeTarget) {
+    const email = removeTarget.dataset.removeAccount;
+    try {
+      await requestJson(`/api/accounts?email=${encodeURIComponent(email)}`, { method: 'DELETE' });
+      state.accounts = state.accounts.filter((account) => account.email !== email);
+      renderAccounts();
+      if (elements.accountFilter.value === email) elements.accountFilter.value = '';
+      notify(`${email} removed.`);
+    } catch (error) {
+      notify(error.message);
+    }
+    return;
+  }
+
   const account = event.target.closest('[data-account]')?.dataset.account;
   if (account) {
     elements.accountFilter.value = account;
