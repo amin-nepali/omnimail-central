@@ -4,7 +4,7 @@ const elements = Object.fromEntries([
   'all-count', 'account-filter', 'search-input', 'result-count', 'current-view', 'page-title',
   'page-subtitle', 'footer-project', 'toast', 'message-dialog', 'message-detail',
   'access-dialog', 'access-form', 'access-password', 'access-error', 'access-submit',
-].map((id) => [id, document.getElementById(id)]));
+].map((id) => [id.replace(/-([a-z])/g, (_match, letter) => letter.toUpperCase()), document.getElementById(id)]));
 
 function escapeHtml(value = '') {
   return String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);

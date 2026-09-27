@@ -2,6 +2,7 @@ node_modules/
 .env
 .env.*
 !.env.example
+vercel-variables.txt
 serviceAccount*.json
 *-firebase-adminsdk-*.json
 firebase-admin-service-account*.json
