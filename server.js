@@ -88,7 +88,7 @@ function hasValidSession(request) {
 function setSessionCookie(response) {
   const expiresAt = String(Math.floor(Date.now() / 1000) + sessionLifetimeSeconds);
   const token = `${expiresAt}.${sessionSignature(expiresAt)}`;
-  const attributes = [`${sessionCookie}=${token}`, 'HttpOnly', 'SameSite=Lax', 'Path=/', `Max-Age=${sessionLifetimeSeconds}`];
+  const attributes = [`${sessionCookie}=${token}`, 'HttpOnly', 'SameSite=Lax', 'Path=/'];
   if (production) attributes.push('Secure');
   response.setHeader('Set-Cookie', attributes.join('; '));
 }

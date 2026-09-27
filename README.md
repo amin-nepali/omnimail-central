@@ -96,4 +96,6 @@ The API is served by `api/[...route].js`. Before connecting Gmail accounts, conf
 
 Add the production callback URL above to the Google OAuth client's authorized redirect URIs. The `/__/auth/handler` Firebase URL is not the callback used by this backend. Set all variables for the Production environment, then redeploy the latest GitHub commit. Mail and account endpoints remain inaccessible until operator authentication is configured.
 
+The shared workspace password is prompted for in each new browser session. Its signed `HttpOnly` cookie is not persisted when the browser session ends and expires server-side after 12 hours.
+
 For local development, copy `.env.example` to `.env`; the local server does not require the production workspace password. Never commit `.env` or any service-account JSON.
