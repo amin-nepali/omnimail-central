@@ -2,5 +2,11 @@ node_modules/
 .env
 .env.*
 !.env.example
+serviceAccount*.json
+*-firebase-adminsdk-*.json
+firebase-admin-service-account*.json
+.firebase/
 coverage/
 npm-debug.log*
+firebase-debug.log
+firestore-debug.log

@@ -38,6 +38,8 @@ The OAuth callback stores account credentials in Firestore. Sync fetches up to 1
 - `connected_accounts`: account email, refresh token, date added, and connection status.
 - `cached_emails` (optional): message ID, account email, subject, snippet, date, and category.
 
+Firestore client access is denied by [`firestore.rules`](firestore.rules). The Node server uses Firebase Admin credentials, which bypass Firestore rules; keep that service-account JSON out of source control. Deploy the rules with `npx firebase-tools deploy --only firestore:rules` after signing in to the Firebase CLI and selecting the intended project.
+
 ## Security Notes
 
 - Keep OAuth client secrets, Firebase Admin credentials, and refresh tokens on the server. Never expose them to browser code or commit them to the repository.
@@ -78,6 +80,20 @@ Open `http://localhost:3000`. The dashboard runs without credentials; connecting
 
 Copy `.env.example` to `.env` when you are ready to configure integrations. In Google Cloud, enable the Gmail API, configure the OAuth consent screen, create an OAuth 2.0 **Web application** client, and add `http://localhost:3000/api/auth/google/callback` as an authorized redirect URI. Add the Google test accounts to the consent screen if the app remains in testing mode.
 
-Create a Firebase Admin service account with access to the project's Firestore database. Put its JSON contents in `FIREBASE_SERVICE_ACCOUNT_JSON` as a single-line JSON value. The browser config in `firebase.md` is public client configuration and is not a substitute for the Admin service account. Never commit `.env` or expose service-account credentials.
+Create a new Firebase Admin service-account key after revoking any key that has been exposed. Save it locally as `firebase-admin-service-account.json` (or update `GOOGLE_APPLICATION_CREDENTIALS` in `.env`). The browser API key in `firebase.md` is a public client identifier and is not a substitute for the Admin service account. Restrict that key to the required APIs and authorized websites in Google Cloud. Never commit `.env` or expose service-account credentials.
 
-This initial server is local-only. Do not expose it to the public internet or deploy it until dashboard/operator authentication and production hosting configuration have been added.
+## Deploying to Vercel
+
+The API is served by `api/[...route].js`. Before connecting Gmail accounts, configure these variables in the Vercel project's Production environment:
+
+- `FIREBASE_PROJECT_ID`
+- `FIREBASE_SERVICE_ACCOUNT_JSON` (a newly generated service-account JSON; revoke any exposed key first)
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REDIRECT_URI=https://omnimail-central.vercel.app/api/auth/google/callback`
+- `APP_ACCESS_PASSWORD` (a strong private workspace password)
+- `APP_SESSION_SECRET` (a unique random secret; generate locally, never commit it)
+
+Add the production callback URL above to the Google OAuth client's authorized redirect URIs. The `/__/auth/handler` Firebase URL is not the callback used by this backend. Set all variables for the Production environment, then redeploy the latest GitHub commit. Mail and account endpoints remain inaccessible until operator authentication is configured.
+
+For local development, copy `.env.example` to `.env`; the local server does not require the production workspace password. Never commit `.env` or any service-account JSON.

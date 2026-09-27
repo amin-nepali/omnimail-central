@@ -2,7 +2,7 @@
 npm install firebase
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCpqJMmpz7_TvXFUScOepCw_v3dqIK_Mw4",
+  apiKey: "<REDACTED - retrieve from Firebase Console if needed>",
   authDomain: "omnimail-central-app.firebaseapp.com",
   projectId: "omnimail-central-app",
   storageBucket: "omnimail-central-app.firebasestorage.app",
@@ -12,3 +12,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+// This browser API key is not a database credential. Restrict it in Google Cloud
+// to the required APIs and authorized websites. Never put Admin SDK credentials
+// or OAuth client secrets in browser code or this file.

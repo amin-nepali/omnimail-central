@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // All database access goes through the trusted server using Firebase Admin.
+    // The Admin SDK bypasses these rules; browser/client access is denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

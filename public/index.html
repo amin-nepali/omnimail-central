@@ -76,6 +76,17 @@
       </main>
     </div>
     <dialog id="message-dialog" class="message-dialog"><form method="dialog"><button class="dialog-close" aria-label="Close message">&times;</button></form><div id="message-detail"></div></dialog>
+    <dialog id="access-dialog" class="access-dialog">
+      <form id="access-form">
+        <span class="eyebrow">PRIVATE WORKSPACE</span>
+        <h2>Sign in to your inbox</h2>
+        <p>Enter your workspace password to access connected accounts and mail.</p>
+        <label for="access-password">Workspace password</label>
+        <input id="access-password" name="password" type="password" autocomplete="current-password" required>
+        <p class="access-error" id="access-error" aria-live="polite"></p>
+        <button class="primary-button" id="access-submit" type="submit">Continue</button>
+      </form>
+    </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </body>
 </html>

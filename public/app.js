@@ -3,6 +3,7 @@ const elements = Object.fromEntries([
   'setup-banner', 'setup-state', 'sync-status', 'message-list', 'account-list', 'account-count',
   'all-count', 'account-filter', 'search-input', 'result-count', 'current-view', 'page-title',
   'page-subtitle', 'footer-project', 'toast', 'message-dialog', 'message-detail',
+  'access-dialog', 'access-form', 'access-password', 'access-error', 'access-submit',
 ].map((id) => [id, document.getElementById(id)]));
 
 function escapeHtml(value = '') {
@@ -76,6 +77,16 @@ function setView(view) {
 
 async function loadInitialState() {
   try {
+    const session = await requestJson('/api/session');
+    if (session.required && !session.configured) {
+      elements.setupBanner.querySelector('strong').textContent = 'Workspace access needs configuration';
+      elements.setupBanner.querySelector('p').textContent = 'Set APP_ACCESS_PASSWORD and APP_SESSION_SECRET in the Vercel project environment.';
+      return;
+    }
+    if (session.required && !session.authenticated) {
+      elements.accessDialog.showModal();
+      return;
+    }
     const status = await requestJson('/api/status');
     document.body.dataset.configured = String(status.ready);
     elements.footerProject.textContent = `FIREBASE PROJECT: ${status.projectId}`.toUpperCase();
@@ -92,6 +103,26 @@ async function loadInitialState() {
     notify(error.message);
   }
 }
+
+elements.accessForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  elements.accessSubmit.disabled = true;
+  elements.accessError.textContent = '';
+  try {
+    await requestJson('/api/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: elements.accessPassword.value }),
+    });
+    elements.accessPassword.value = '';
+    elements.accessDialog.close();
+    await loadInitialState();
+  } catch (error) {
+    elements.accessError.textContent = error.message;
+  } finally {
+    elements.accessSubmit.disabled = false;
+  }
+});
 
 async function syncMail() {
   if (state.loading) return;
