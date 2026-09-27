@@ -3,8 +3,25 @@ const elements = Object.fromEntries([
   'setup-banner', 'setup-state', 'sync-status', 'sync-summary', 'message-list', 'account-list', 'account-count',
   'all-count', 'account-filter', 'search-input', 'result-count', 'current-view', 'page-title',
   'page-subtitle', 'footer-project', 'toast', 'message-dialog', 'message-detail',
-  'access-dialog', 'access-form', 'access-password', 'access-error', 'access-submit',
+  'access-dialog', 'access-form', 'access-password', 'access-error', 'access-submit', 'theme-toggle',
 ].map((id) => [id.replace(/-([a-z])/g, (_match, letter) => letter.toUpperCase()), document.getElementById(id)]));
+
+function applyTheme(theme) {
+  const resolvedTheme = theme === 'dark' ? 'dark' : 'light';
+  document.body.dataset.theme = resolvedTheme;
+  const toggle = elements.themeToggle;
+  if (toggle) {
+    toggle.innerHTML = resolvedTheme === 'dark' ? '<span aria-hidden="true">☀</span>' : '<span aria-hidden="true">☾</span>';
+    toggle.setAttribute('aria-label', resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+    toggle.title = resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+  }
+  localStorage.setItem('omnimail-theme', resolvedTheme);
+}
+
+function initializeTheme() {
+  const savedTheme = localStorage.getItem('omnimail-theme');
+  applyTheme(savedTheme || 'light');
+}
 
 function escapeHtml(value = '') {
   return String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
@@ -221,6 +238,10 @@ function showMessage(message) {
 document.querySelectorAll('.nav-item').forEach((button) => button.addEventListener('click', () => setView(button.dataset.view)));
 document.getElementById('sync-button').addEventListener('click', syncMail);
 document.getElementById('refresh-button').addEventListener('click', syncMail);
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  const nextTheme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+  applyTheme(nextTheme);
+});
 document.getElementById('add-account').addEventListener('click', () => window.location.assign('/api/auth/google'));
 document.getElementById('empty-connect').addEventListener('click', () => window.location.assign('/api/auth/google'));
 elements.searchInput.addEventListener('input', renderMessages);
