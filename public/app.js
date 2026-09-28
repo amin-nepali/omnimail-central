@@ -27,6 +27,26 @@ function escapeHtml(value = '') {
   return String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
 }
 
+function linkifyText(value = '') {
+  const text = String(value);
+  const urlPattern = /\b(?:https?:\/\/|www\.)[^\s<>"']+/gi;
+  let result = '';
+  let lastIndex = 0;
+
+  for (const match of text.matchAll(urlPattern)) {
+    const rawUrl = match[0];
+    const punctuation = rawUrl.match(/[),.!?;:\]}]+$/)?.[0] || '';
+    const url = rawUrl.slice(0, rawUrl.length - punctuation.length);
+    if (!url) continue;
+
+    const href = /^www\./i.test(url) ? `https://${url}` : url;
+    result += `${escapeHtml(text.slice(lastIndex, match.index))}<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>${escapeHtml(punctuation)}`;
+    lastIndex = match.index + rawUrl.length;
+  }
+
+  return result + escapeHtml(text.slice(lastIndex));
+}
+
 function notify(message) {
   elements.toast.textContent = message;
   elements.toast.classList.add('visible');
@@ -234,7 +254,7 @@ async function syncMail() {
 }
 
 function showMessage(message) {
-  elements.messageDetail.innerHTML = `<div class="detail-meta"><span class="category-tag category-${escapeHtml(message.category.toLowerCase())}">${escapeHtml(message.category)}</span><span>${escapeHtml(message.accountEmail)}</span></div><h2>${escapeHtml(message.subject)}</h2><p class="detail-sender">${escapeHtml(message.sender)}<span>${escapeHtml(message.date)}</span></p><div class="detail-body">${escapeHtml(message.body)}</div>`;
+  elements.messageDetail.innerHTML = `<div class="detail-meta"><span class="category-tag category-${escapeHtml(message.category.toLowerCase())}">${escapeHtml(message.category)}</span><span>${escapeHtml(message.accountEmail)}</span></div><h2>${escapeHtml(message.subject)}</h2><p class="detail-sender">${escapeHtml(message.sender)}<span>${escapeHtml(message.date)}</span></p><div class="detail-body">${linkifyText(message.body)}</div>`;
   elements.messageDialog.showModal();
 }
 
