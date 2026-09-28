@@ -191,7 +191,10 @@ elements.accessForm.addEventListener('submit', async (event) => {
 
 function renderSyncSummary(messagesLoaded, failures) {
   if (failures.length) {
-    elements.syncSummary.textContent = `${messagesLoaded} messages loaded; ${failures.length} account(s) need attention.`;
+    const failureDetails = failures.map((failure) => `
+      <li><strong>${escapeHtml(failure.email || 'Account')}</strong><span>${escapeHtml(failure.error || 'Sync failed.')}</span></li>
+    `).join('');
+    elements.syncSummary.innerHTML = `<strong>${messagesLoaded} messages loaded; ${failures.length} account(s) need attention.</strong><ul>${failureDetails}</ul>`;
     elements.syncSummary.classList.add('is-warning');
     elements.syncSummary.classList.remove('is-success');
     return;
